@@ -1,15 +1,663 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-<meta charset="utf-8">
-<title>100 Continue</title>
-<style>
-body{text-align:center;font-family:sans-serif;margin:0}
-h1{background:#333;color:white;margin:0;padding:1em}
-.dummy{font-size:128px}
-</style>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>100 Continue</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #f4f4f4;
+      color: #050505;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden;
+    }
+
+    .page {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background:
+        linear-gradient(90deg, #0817d8 0 17%, transparent 17%),
+        #f4f4f4;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 4vh 8vw;
+      border: 1px solid rgba(0,0,0,.25);
+      background: rgba(255,255,255,.72);
+      overflow: hidden;
+    }
+
+    .noise {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .18;
+      background-image:
+        radial-gradient(circle, rgba(0,0,0,.45) 0 1px, transparent 1px);
+      background-size: 5px 5px;
+      mix-blend-mode: multiply;
+      z-index: 50;
+    }
+
+    .blue-block {
+      position: absolute;
+      background: #0618df;
+      z-index: 4;
+    }
+
+    .blue-block.one {
+      left: 0;
+      top: 0;
+      width: 150px;
+      height: 100%;
+    }
+
+    .blue-block.two {
+      right: 0;
+      top: 24%;
+      width: 42%;
+      height: 44px;
+    }
+
+    .blue-block.three {
+      left: 24%;
+      bottom: 18%;
+      width: 26%;
+      height: 28px;
+    }
+
+    .blue-block.four {
+      right: 14%;
+      bottom: 34%;
+      width: 28%;
+      height: 64px;
+    }
+
+    .black-bar {
+      position: absolute;
+      height: 30px;
+      background: #060606;
+      z-index: 20;
+    }
+
+    .black-bar.top {
+      top: 4%;
+      left: 3%;
+      width: 38%;
+    }
+
+    .black-bar.bottom {
+      bottom: 2%;
+      right: 4%;
+      width: 34%;
+    }
+
+    .gray-bar {
+      position: absolute;
+      height: 18px;
+      background: #555;
+      z-index: 19;
+    }
+
+    .gray-bar.one {
+      top: 10%;
+      left: 10%;
+      width: 44%;
+    }
+
+    .gray-bar.two {
+      bottom: 11%;
+      left: 52%;
+      width: 30%;
+    }
+
+    .title {
+      position: absolute;
+      left: 7%;
+      top: 13%;
+      z-index: 30;
+      text-transform: uppercase;
+      font-weight: 900;
+      letter-spacing: -0.08em;
+      line-height: .78;
+      font-size: clamp(78px, 16vw, 220px);
+      color: #050505;
+      mix-blend-mode: multiply;
+    }
+
+    .title span {
+      display: block;
+    }
+
+    .title .outline {
+      color: transparent;
+      -webkit-text-stroke: 2px #050505;
+    }
+
+    .message {
+      position: absolute;
+      left: 8%;
+      bottom: 13%;
+      width: min(680px, 78vw);
+      z-index: 35;
+      color: #fff;
+      background: #0618df;
+      padding: 18px 22px;
+      font-size: clamp(18px, 3vw, 34px);
+      font-weight: 900;
+      line-height: 1.25;
+      letter-spacing: -0.03em;
+      box-shadow: 14px 14px 0 rgba(0,0,0,.14);
+    }
+
+    .sub-message {
+      position: absolute;
+      right: 7%;
+      top: 37%;
+      width: 260px;
+      z-index: 35;
+      color: #fff;
+      background: #050505;
+      padding: 14px 16px;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+
+    .code {
+      position: absolute;
+      right: 6%;
+      bottom: 8%;
+      z-index: 35;
+      font-size: clamp(76px, 14vw, 190px);
+      line-height: .75;
+      font-weight: 900;
+      letter-spacing: -0.09em;
+      color: #0618df;
+      mix-blend-mode: multiply;
+    }
+
+    .code small {
+      display: block;
+      font-size: .18em;
+      letter-spacing: .12em;
+      color: #050505;
+      margin-left: .12em;
+    }
+
+    .circle {
+      position: absolute;
+      border-radius: 50%;
+      border: 2px solid rgba(6, 24, 223, .55);
+      z-index: 8;
+    }
+
+    .circle.one {
+      width: 520px;
+      height: 520px;
+      right: -120px;
+      bottom: -120px;
+    }
+
+    .circle.two {
+      width: 360px;
+      height: 360px;
+      left: 18%;
+      top: 12%;
+    }
+
+    .circle.three {
+      width: 140px;
+      height: 140px;
+      left: 10%;
+      bottom: 29%;
+      background: #050505;
+      border: none;
+      z-index: 26;
+    }
+
+    .orbit {
+      position: absolute;
+      width: 760px;
+      height: 280px;
+      border: 2px solid rgba(6, 24, 223, .45);
+      border-radius: 50%;
+      right: -130px;
+      bottom: 8%;
+      transform: rotate(-20deg);
+      z-index: 7;
+    }
+
+    .orbit.two {
+      right: 13%;
+      top: 6%;
+      transform: rotate(23deg);
+      width: 600px;
+      height: 220px;
+    }
+
+    .dots {
+      position: absolute;
+      width: 310px;
+      height: 310px;
+      background-image: radial-gradient(#0618df 1.6px, transparent 1.6px);
+      background-size: 12px 12px;
+      z-index: 9;
+      opacity: .9;
+    }
+
+    .dots.one {
+      left: 24%;
+      top: 28%;
+    }
+
+    .dots.two {
+      right: 10%;
+      bottom: 25%;
+    }
+
+    .hand {
+      position: absolute;
+      left: 35%;
+      bottom: 2%;
+      width: 220px;
+      height: 560px;
+      z-index: 25;
+      filter: grayscale(1) contrast(1.25);
+      transform: rotate(-13deg);
+    }
+
+    .hand .arm {
+      position: absolute;
+      bottom: 0;
+      left: 70px;
+      width: 95px;
+      height: 390px;
+      background: linear-gradient(90deg, #222, #d9d9d9 35%, #777 70%, #111);
+      border-radius: 48px 48px 20px 20px;
+      clip-path: polygon(16% 100%, 89% 100%, 78% 22%, 62% 0, 34% 4%, 21% 24%);
+    }
+
+    .hand .palm {
+      position: absolute;
+      top: 210px;
+      left: 44px;
+      width: 150px;
+      height: 160px;
+      background: linear-gradient(120deg, #111, #eee 38%, #8a8a8a 68%, #222);
+      border-radius: 70px 62px 48px 45px;
+      transform: rotate(-5deg);
+    }
+
+    .finger {
+      position: absolute;
+      background: linear-gradient(90deg, #181818, #efefef 50%, #333);
+      border-radius: 40px;
+      z-index: 26;
+    }
+
+    .finger.f1 {
+      width: 38px;
+      height: 180px;
+      left: 70px;
+      top: 72px;
+      transform: rotate(-16deg);
+    }
+
+    .finger.f2 {
+      width: 34px;
+      height: 160px;
+      left: 115px;
+      top: 78px;
+      transform: rotate(5deg);
+    }
+
+    .finger.f3 {
+      width: 32px;
+      height: 130px;
+      left: 154px;
+      top: 112px;
+      transform: rotate(20deg);
+    }
+
+    .finger.f4 {
+      width: 31px;
+      height: 105px;
+      left: 184px;
+      top: 170px;
+      transform: rotate(38deg);
+    }
+
+    .thumb {
+      position: absolute;
+      width: 44px;
+      height: 130px;
+      left: 14px;
+      top: 222px;
+      background: linear-gradient(90deg, #111, #e7e7e7 55%, #333);
+      border-radius: 40px;
+      transform: rotate(-48deg);
+      z-index: 27;
+    }
+
+    .bird {
+      position: absolute;
+      width: 130px;
+      height: 64px;
+      background: #fff;
+      z-index: 21;
+      clip-path: polygon(
+        0 55%, 25% 42%, 43% 10%, 50% 42%,
+        100% 0, 69% 54%, 100% 100%,
+        50% 66%, 30% 92%, 32% 64%
+      );
+      filter: drop-shadow(2px 2px 0 #0618df);
+    }
+
+    .bird.b1 {
+      top: 17%;
+      left: 11%;
+      transform: rotate(-15deg);
+    }
+
+    .bird.b2 {
+      right: 6%;
+      top: 48%;
+      transform: rotate(18deg) scale(.9);
+      background: #0618df;
+      filter: none;
+    }
+
+    .bird.b3 {
+      right: 26%;
+      bottom: 24%;
+      transform: rotate(-20deg) scale(.75);
+    }
+
+    .star {
+      position: absolute;
+      left: 33%;
+      top: 21%;
+      width: 135px;
+      height: 135px;
+      background: #fff;
+      clip-path: polygon(
+        50% 0%, 61% 35%, 98% 35%, 68% 56%,
+        79% 91%, 50% 70%, 21% 91%, 32% 56%,
+        2% 35%, 39% 35%
+      );
+      z-index: 24;
+      filter: drop-shadow(0 0 0 #050505);
+    }
+
+    .star-bg {
+      position: absolute;
+      left: 28%;
+      top: 16%;
+      width: 230px;
+      height: 230px;
+      background: #5d5d5d;
+      border-radius: 50%;
+      z-index: 18;
+    }
+
+    .mini-text {
+      position: absolute;
+      z-index: 36;
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.05;
+      font-weight: 700;
+      color: #050505;
+      background: rgba(255,255,255,.55);
+      padding: 8px;
+    }
+
+    .mini-text.left {
+      left: 7%;
+      top: 40%;
+      width: 280px;
+    }
+
+    .mini-text.right {
+      right: 19%;
+      bottom: 13%;
+      color: #fff;
+      background: transparent;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .frame-line {
+      position: absolute;
+      border: 1px solid rgba(6, 24, 223, .75);
+      z-index: 12;
+    }
+
+    .frame-line.one {
+      left: 21%;
+      top: 22%;
+      width: 38%;
+      height: 43%;
+    }
+
+    .frame-line.two {
+      right: 16%;
+      top: 33%;
+      width: 27%;
+      height: 42%;
+    }
+
+    .frame-line.three {
+      left: 13%;
+      bottom: 9%;
+      width: 24%;
+      height: 16%;
+    }
+
+    .back {
+      position: absolute;
+      left: 7%;
+      bottom: 5%;
+      z-index: 45;
+      text-decoration: none;
+      color: #050505;
+      background: #fff;
+      border: 2px solid #050505;
+      padding: 12px 22px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      box-shadow: 8px 8px 0 #0618df;
+      transition: .2s;
+    }
+
+    .back:hover {
+      transform: translate(4px, 4px);
+      box-shadow: 4px 4px 0 #0618df;
+    }
+
+    @media (max-width: 800px) {
+      body {
+        overflow: auto;
+      }
+
+      .page {
+        min-height: 100vh;
+        height: auto;
+        background:
+          linear-gradient(90deg, #0817d8 0 11%, transparent 11%),
+          #f4f4f4;
+      }
+
+      .stage {
+        position: relative;
+        inset: auto;
+        margin: 4vw;
+        min-height: 92vh;
+      }
+
+      .title {
+        font-size: clamp(70px, 23vw, 130px);
+        left: 9%;
+        top: 12%;
+      }
+
+      .message {
+        left: 8%;
+        bottom: 22%;
+        width: 84%;
+        font-size: 20px;
+      }
+
+      .code {
+        right: 8%;
+        bottom: 7%;
+        font-size: 92px;
+      }
+
+      .sub-message,
+      .mini-text.left,
+      .mini-text.right {
+        display: none;
+      }
+
+      .hand {
+        left: 36%;
+        width: 180px;
+        height: 500px;
+        opacity: .85;
+      }
+
+      .star-bg {
+        left: 28%;
+        top: 22%;
+        width: 180px;
+        height: 180px;
+      }
+
+      .star {
+        left: 33%;
+        top: 26%;
+        width: 95px;
+        height: 95px;
+      }
+
+      .circle.one {
+        width: 430px;
+        height: 430px;
+      }
+
+      .circle.two {
+        width: 260px;
+        height: 260px;
+      }
+
+      .blue-block.one {
+        width: 80px;
+      }
+    }
+  </style>
+</head>
+
 <body>
-<h1>100 Continue</h1>
-<div class="dummy">👍</div>
-<p>ええで、そのまま続けて送ってきてや。</p>
+  <main class="page">
+    <section class="stage">
+
+      <div class="blue-block one"></div>
+      <div class="blue-block two"></div>
+      <div class="blue-block three"></div>
+      <div class="blue-block four"></div>
+
+      <div class="black-bar top"></div>
+      <div class="black-bar bottom"></div>
+      <div class="gray-bar one"></div>
+      <div class="gray-bar two"></div>
+
+      <div class="circle one"></div>
+      <div class="circle two"></div>
+      <div class="circle three"></div>
+      <div class="orbit"></div>
+      <div class="orbit two"></div>
+
+      <div class="dots one"></div>
+      <div class="dots two"></div>
+
+      <div class="frame-line one"></div>
+      <div class="frame-line two"></div>
+      <div class="frame-line three"></div>
+
+      <div class="star-bg"></div>
+      <div class="star"></div>
+
+      <div class="bird b1"></div>
+      <div class="bird b2"></div>
+      <div class="bird b3"></div>
+
+      <h1 class="title">
+        <span>100</span>
+        <span>CON</span>
+        <span class="outline">TINUE</span>
+      </h1>
+
+      <p class="message">
+        クライアントは、このままリクエストの送信を続けてかまいません。
+      </p>
+
+      <p class="sub-message">
+        The server has received the request headers.
+        Continue sending the request body.
+      </p>
+
+      <div class="mini-text left">
+        HTTP/1.1 100 CONTINUE<br />
+        STATUS: TEMPORARY RESPONSE<br />
+        REQUEST: ACCEPTED<br />
+        CONNECTION: STILL ALIVE<br />
+        PLEASE CONTINUE TRANSMISSION
+      </div>
+
+      <div class="mini-text right">
+        You may continue.<br />
+        The process is still alive.<br />
+        Keep sending.
+      </div>
+
+      <div class="hand">
+        <div class="arm"></div>
+        <div class="palm"></div>
+        <div class="finger f1"></div>
+        <div class="finger f2"></div>
+        <div class="finger f3"></div>
+        <div class="finger f4"></div>
+        <div class="thumb"></div>
+      </div>
+
+      <div class="code">
+        100
+        <small>CONTINUE</small>
+      </div>
+
+      <a href="/" class="back">Back to Home</a>
+
+      <div class="noise"></div>
+    </section>
+  </main>
 </body>
 </html>
